@@ -1,32 +1,26 @@
-import { sendMusicEmbed } from "../../utils/sendMessage.js";
-import { validateVoiceChannel, validateSearchQuery } from "../../utils/validate/validatePlayCommand.js";
+import { validateVoiceChannelMember, validateSearchQuery } from '../../validators/playCommand.js';
+import { executePlay } from './playService.js';
 
 export default async function play(message, args, player) {
+    const query = args.join(' ').trim();
+    const searchQueryError = validateSearchQuery(query);
 
-    const voiceChanel = message.member.voice.channel;
+    if (searchQueryError) {
+        return message.reply(
+            `${searchQueryError} Ejemplo: \`!play nombre de la canción\` o usa \`/play\` con el campo query.`
+        );
+    }
 
-    if (validateVoiceChannel(message)) {
+    const voiceChannelError = validateVoiceChannelMember(message.member);
+    if (voiceChannelError) {
         return message.reply(voiceChannelError);
     }
 
-    if (validateSearchQuery(args)) {
-        return message.reply(searchQueryError);
-    }
-
-    const results = args.join(' ');
-
-    const result = await player.play(voiceChanel, results, {
-        nodeOptions: {
-            metadata: {
-                channel: message.channel,
-            },
-            selfDeaf: true,
-            volume: 80,
-            leaveOnEmpty: true,
-            leaveOnEmptyCooldown: 30000,
-            leaveOnEnd: true,
-            leaveOnEndCooldown: 30000,
-        }
-    })
-    sendMusicEmbed(message.channel, result.track);
+    return executePlay({
+        member: message.member,
+        textChannel: message.channel,
+        query,
+        player,
+        reply: ({ content }) => message.reply(content),
+    });
 }

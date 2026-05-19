@@ -1,22 +1,11 @@
-import { validateVoiceChannel } from "../../utils/validate/validatePlayCommand.js";
+import { createPrefixReply } from '../../lib/discord/replyAdapter.js';
+import { executeResume } from './playbackService.js';
 
-export default async function replay(message, args, player) {
-
-    if (validateVoiceChannel(message)) {
-        return message.reply(voiceChannelError);
-    }
-
-    const queue = player.queues.get(message.guild);
-    if (!queue) {
-        return message.reply({ content: 'No hay una lista reproduciendose.' })
-    }
-
-    if (!queue.node.isPaused()) {
-        return message.reply({ content: 'La musica ya se esta reproduciendo.' })
-    }
-
-    queue.node.resume();
-    message.channel.send('Replay');
-
+export default async function replay(message, _args, player) {
+    return executeResume({
+        member: message.member,
+        guildId: message.guild.id,
+        player,
+        reply: createPrefixReply(message),
+    });
 }
- 

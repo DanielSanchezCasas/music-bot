@@ -1,8 +1,19 @@
 {
   "name": "bot-discord",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "src/index.js",
+  "packageManager": "pnpm@10.11.0",
+  "engines": {
+    "node": ">=18"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "ffmpeg-static",
+      "youtube-dl-exec"
+    ]
+  },
   "scripts": {
+    "start": "node src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "type": "module",
@@ -11,15 +22,14 @@
   "description": "",
   "dependencies": {
     "@discord-player/extractor": "^7.1.0",
-    "bgutils-js": "^3.2.0",
+    "@snazzah/davey": "^0.1.11",
     "discord-player": "^7.1.0",
-    "discord-player-youtubei": "^1.4.5",
+    "discord-player-youtubei": "^2.0.0",
     "discord.js": "^14.18.0",
     "dotenv": "^16.5.0",
     "ffmpeg-static": "^5.2.0",
-    "i": "^0.3.7",
     "mediaplex": "^1.0.0",
-    "npm": "^11.3.0"
+    "youtube-dl-exec": "^3.1.7"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",

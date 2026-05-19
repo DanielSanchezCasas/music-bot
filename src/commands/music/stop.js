@@ -1,20 +1,11 @@
-import { validateVoiceChannel } from "../../utils/validate/validatePlayCommand.js";
+import { createPrefixReply } from '../../lib/discord/replyAdapter.js';
+import { executeStop } from './playbackService.js';
 
-export default async function stop(message, args, player) {
-
-    if (validateVoiceChannel(message)) {
-        return message.reply(voiceChannelError);
-    }
-
-    const queue = player.queues.get(message.guild);
-    if (!queue) {
-        return message.reply({ content: 'No hay una lista reproduciendose.' })
-    }
-
-
-    message.channel.send('Stop');
-
-    queue.delete();
-    queue.node.stop;
+export default async function stop(message, _args, player) {
+    return executeStop({
+        member: message.member,
+        guildId: message.guild.id,
+        player,
+        reply: createPrefixReply(message),
+    });
 }
- 
