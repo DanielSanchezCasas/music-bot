@@ -1,0 +1,16 @@
+name: music-bot
+
+services:
+  music-bot:
+    build: .
+    container_name: music-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+    labels:
+      - "casaos.io/author=Daniel"
+      - "casaos.io/category=Media"
+      - "casaos.io/description=Bot de música para Discord"
+      - "casaos.io/name=Music Bot"
