@@ -1,5 +1,5 @@
 import { REST, Routes } from 'discord.js';
-import { token, guildId } from '../config/env.js';
+import { token, guildIds } from '../config/env.js';
 import { slashCommands } from '../commands/slash/definitions.js';
 
 function formatDiscordError(error) {
@@ -24,22 +24,33 @@ export async function registerSlashCommands(client) {
     const body = slashCommands.map((command) => command.toJSON());
     const appId = client.user.id;
 
-    if (guildId) {
-        if (!client.guilds.cache.has(guildId)) {
-            const servers = [...client.guilds.cache.values()]
-                .map((g) => `${g.name} (${g.id})`)
-                .join(', ');
-            throw new Error(
-                `GUILD_ID incorrecto. El bot no está en ${guildId}. Servidores: ${servers || 'ninguno'}`
-            );
+    if (guildIds.length) {
+        const registered = [];
+
+        for (const id of guildIds) {
+            if (!client.guilds.cache.has(id)) {
+                const servers = [...client.guilds.cache.values()]
+                    .map((g) => `${g.name} (${g.id})`)
+                    .join(', ');
+                throw new Error(
+                    `GUILD_ID incluye ${id} pero el bot no está ahí. Servidores: ${servers || 'ninguno'}`
+                );
+            }
+
+            try {
+                await rest.put(Routes.applicationGuildCommands(appId, id), { body });
+                registered.push(id);
+            } catch (error) {
+                throw new Error(formatDiscordError(error));
+            }
         }
 
-        try {
-            await rest.put(Routes.applicationGuildCommands(appId, guildId), { body });
-            return { mode: 'guild', count: body.length, guildId };
-        } catch (error) {
-            throw new Error(formatDiscordError(error));
-        }
+        return {
+            mode: 'guild',
+            count: body.length,
+            guildId: registered[0],
+            guildIds: registered,
+        };
     }
 
     try {

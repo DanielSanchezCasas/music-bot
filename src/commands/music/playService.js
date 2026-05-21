@@ -10,12 +10,29 @@ import { syncFromQueue } from '../../lib/queue/sync.js';
  * @param {import('discord.js').TextChannel} ctx.textChannel
  * @param {string} ctx.query
  * @param {import('discord-player').Player} ctx.player
+ * @param {import('discord.js').VoiceBasedChannel} [ctx.voiceChannel]
  * @param {(payload: { content: string, ephemeral?: boolean }) => Promise<void>} ctx.reply
  */
-export async function executePlay({ member, textChannel, query, player, reply }) {
-    const voiceChannel = member.voice.channel;
+export async function executePlay({
+    member,
+    textChannel,
+    query,
+    player,
+    reply,
+    voiceChannel: voiceChannelOverride,
+}) {
+    const voiceChannel = voiceChannelOverride ?? member.voice?.channel;
 
-    const voiceChannelError = validateVoiceChannelMember(member);
+    if (!voiceChannel) {
+        return reply({
+            content: 'No estás conectado a un canal de voz',
+            ephemeral: true,
+        });
+    }
+
+    const voiceChannelError = voiceChannelOverride
+        ? null
+        : validateVoiceChannelMember(member);
     if (voiceChannelError) {
         return reply({ content: voiceChannelError, ephemeral: true });
     }
@@ -40,10 +57,8 @@ export async function executePlay({ member, textChannel, query, player, reply })
                 selfDeaf: true,
                 volume: 100,
                 resampler: 48000,
-                leaveOnEmpty: true,
-                leaveOnEmptyCooldown: 30000,
-                leaveOnEnd: true,
-                leaveOnEndCooldown: 30000,
+                leaveOnEmpty: false,
+                leaveOnEnd: false,
             },
         });
 
@@ -51,7 +66,7 @@ export async function executePlay({ member, textChannel, query, player, reply })
 
         if (result?.track) {
             await sendMusicEmbed(textChannel, result.track, member.user);
-            syncFromQueue(player.queues.get(textChannel.guild));
+            syncFromQueue(player.queues.get(member.guild.id));
 
             const requester = result.track.requestedBy;
             const requesterTag = requester?.id ? ` · <@${requester.id}>` : '';
@@ -61,7 +76,10 @@ export async function executePlay({ member, textChannel, query, player, reply })
             });
         } else {
             status.idle('Sin reproducción');
-            await reply({ content: 'No se pudo iniciar la reproducción.' });
+            await reply({
+                content: 'No se pudo iniciar la reproducción.',
+                ephemeral: true,
+            });
         }
     } catch (error) {
         status.logError('Play', error);

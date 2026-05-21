@@ -5,12 +5,26 @@ services:
     build: .
     container_name: music-bot
     restart: unless-stopped
+    ports:
+      - "3000:3000"
     env_file:
       - .env
     environment:
-      - NODE_ENV=production
+      NODE_ENV: production
+      WEB_PORT: "3000"
+      WEB_DISABLE_TERMINAL_PANEL: "true"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     labels:
       - "casaos.io/author=Daniel"
       - "casaos.io/category=Media"
-      - "casaos.io/description=Bot de música para Discord"
+      - "casaos.io/description=Bot de música para Discord con interfaz web"
       - "casaos.io/name=Music Bot"
+      - "casaos.io/port=3000"
+      - "casaos.io/protocol=http"
+      - "casaos.io/icon=https://cdn.jsdelivr.net/gh/IceWhaleTech/CasaOS-AppStore@main/Apps/Docker/icon.png"
+      - "casaos.io/index=http://{{HOST}}:3000/"

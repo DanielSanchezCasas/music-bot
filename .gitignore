@@ -46,7 +46,9 @@ jspm_packages/
 
 # Vite cache
 dist/
+!web/dist/
 .vite/
+web/node_modules/
 
 # Build output
 build/

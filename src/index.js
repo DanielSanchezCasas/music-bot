@@ -1,4 +1,4 @@
-import { token } from './config/env.js';
+import { token, isWebEnabled } from './config/env.js';
 import * as status from './lib/console/status.js';
 import client from './core/client.js';
 import { createPlayer } from './core/player.js';
@@ -14,7 +14,20 @@ registerDiscordEvents(client);
 registerMessageHandler(client, player);
 registerInteractionHandler(client, player);
 
-client.login(token).catch((error) => {
-    status.logError('No se pudo iniciar sesión en Discord', error);
-    process.exit(1);
-});
+async function boot() {
+    if (isWebEnabled()) {
+        try {
+            const { startWebServer } = await import('./server/index.js');
+            await startWebServer(client, player);
+        } catch (error) {
+            status.logError('Servidor web', error);
+        }
+    }
+
+    client.login(token).catch((error) => {
+        status.logError('No se pudo iniciar sesión en Discord', error);
+        process.exit(1);
+    });
+}
+
+boot();

@@ -1,8 +1,10 @@
 import { Player } from 'discord-player';
-import { YoutubeiExtractor } from 'discord-player-youtubei';
-import { createHighQualityYouTubeStream } from '../services/youtube/stream.js';
+import { YoutubeExtractor } from 'discord-player-youtubei';
+import * as logBus from '../lib/logging/logBus.js';
 import * as status from '../lib/console/status.js';
 import { registerPlayerEvents } from './events/player.js';
+
+const youtubeCookie = process.env.YOUTUBE_COOKIE?.trim() || undefined;
 
 export function createPlayer(client) {
     const player = new Player(client, {
@@ -16,20 +18,19 @@ export function createPlayer(client) {
 }
 
 function registerExtractors(player) {
+    const options = {
+        disablePlayer: false,
+        ...(youtubeCookie ? { cookie: youtubeCookie } : {}),
+    };
+
     player.extractors
-        .register(YoutubeiExtractor, {
-            createStream: (track) => createHighQualityYouTubeStream(track),
-            disablePlayer: true,
-            logLevel: 'NONE',
-            streamOptions: {
-                useClient: 'IOS',
-                highWaterMark: 1 << 20,
-            },
-            overrideDownloadOptions: {
-                type: 'audio',
-                quality: 'best',
-                format: 'm4a',
-            },
+        .register(YoutubeExtractor, options)
+        .then(() => {
+            logBus.append(
+                'info',
+                `YouTube listo (v3${youtubeCookie ? ', con cookies' : ''})`,
+                'player'
+            );
         })
         .catch((error) => {
             status.logError('No se pudo cargar YouTube', error);

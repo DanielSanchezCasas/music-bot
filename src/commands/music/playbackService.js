@@ -16,25 +16,30 @@ const NO_QUEUE = 'No hay música en reproducción.';
  * @param {string} guildId
  * @param {import('discord-player').Player} player
  */
-function getQueue(member, guildId, player) {
-    const voiceError = validateVoiceChannelMember(member);
-    if (voiceError) {
-        return { error: voiceError };
-    }
-
+function getGuildQueue(guildId, player) {
     const queue = player.queues.get(guildId);
-    if (!queue) {
+    if (!queue || queue.deleted) {
         return { error: NO_QUEUE };
     }
-
     return { queue };
+}
+
+function getQueue(member, guildId, player, fromWeb = false) {
+    if (!fromWeb) {
+        const voiceError = validateVoiceChannelMember(member);
+        if (voiceError) {
+            return { error: voiceError };
+        }
+    }
+
+    return getGuildQueue(guildId, player);
 }
 
 /**
  * @param {(payload: { content?: string, embeds?: import('discord.js').APIEmbed[], ephemeral?: boolean }) => Promise<unknown>} reply
  */
-export async function executePause({ member, guildId, player, reply }) {
-    const result = getQueue(member, guildId, player);
+export async function executePause({ member, guildId, player, reply, fromWeb = false }) {
+    const result = getQueue(member, guildId, player, fromWeb);
     if (result.error) {
         return reply({ content: result.error, ephemeral: true });
     }
@@ -55,8 +60,8 @@ export async function executePause({ member, guildId, player, reply }) {
 /**
  * @param {(payload: { content?: string, embeds?: import('discord.js').APIEmbed[], ephemeral?: boolean }) => Promise<unknown>} reply
  */
-export async function executeResume({ member, guildId, player, reply }) {
-    const result = getQueue(member, guildId, player);
+export async function executeResume({ member, guildId, player, reply, fromWeb = false }) {
+    const result = getQueue(member, guildId, player, fromWeb);
     if (result.error) {
         return reply({ content: result.error, ephemeral: true });
     }
@@ -77,8 +82,8 @@ export async function executeResume({ member, guildId, player, reply }) {
 /**
  * @param {(payload: { content?: string, embeds?: import('discord.js').APIEmbed[], ephemeral?: boolean }) => Promise<unknown>} reply
  */
-export async function executeSkip({ member, guildId, player, reply }) {
-    const result = getQueue(member, guildId, player);
+export async function executeSkip({ member, guildId, player, reply, fromWeb = false }) {
+    const result = getQueue(member, guildId, player, fromWeb);
     if (result.error) {
         return reply({ content: result.error, ephemeral: true });
     }
@@ -97,8 +102,8 @@ export async function executeSkip({ member, guildId, player, reply }) {
 /**
  * @param {(payload: { content?: string, embeds?: import('discord.js').APIEmbed[], ephemeral?: boolean }) => Promise<unknown>} reply
  */
-export async function executeStop({ member, guildId, player, reply }) {
-    const result = getQueue(member, guildId, player);
+export async function executeStop({ member, guildId, player, reply, fromWeb = false }) {
+    const result = getQueue(member, guildId, player, fromWeb);
     if (result.error) {
         return reply({ content: result.error, ephemeral: true });
     }

@@ -34,9 +34,15 @@ export function syncFromQueue(queue) {
         return;
     }
 
+    const isPlaying = queue.node.isPlaying();
+    const isPaused = queue.node.isPaused();
     const current = queue.currentTrack;
     const waiting = getWaitingTracks(queue);
-    const isPaused = queue.node.isPaused();
+
+    if ((isPlaying || isPaused) && !current) {
+        status.showQueue('Preparando reproducción…', []);
+        return;
+    }
 
     const nextTitles = waiting.slice(0, MAX_UPCOMING).map((track) => truncate(track.title));
 

@@ -6,8 +6,11 @@ export function registerPlayerEvents(player) {
         status.logError('Error del reproductor', error);
     });
 
-    player.events.on('playerError', (_queue, error, track) => {
+    player.events.on('playerError', (queue, error, track) => {
         status.logError(`Error al reproducir: ${track?.title ?? 'canción'}`, error);
+        if (queue && !queue.deleted) {
+            syncFromQueue(queue);
+        }
     });
 
     player.events.on('playerStart', (queue) => {
@@ -23,10 +26,22 @@ export function registerPlayerEvents(player) {
     });
 
     player.events.on('playerFinish', (queue) => {
+        if (queue?.node?.isPlaying()) {
+            return;
+        }
         syncFromQueue(queue);
     });
 
-    player.events.on('emptyQueue', () => {
-        status.idle('Sin reproducción');
+    player.events.on('emptyQueue', (queue) => {
+        if (queue?.node?.isPlaying()) {
+            return;
+        }
+        syncFromQueue(queue);
+    });
+
+    player.events.on('disconnect', (queue) => {
+        if (queue && !queue.deleted) {
+            status.logError('Voz', new Error('Desconectado del canal de voz'));
+        }
     });
 }

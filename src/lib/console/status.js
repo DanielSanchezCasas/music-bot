@@ -1,5 +1,8 @@
 import readline from 'readline';
+import { EventEmitter } from 'events';
 import { Log } from 'discord-player-youtubei';
+import * as logBus from '../logging/logBus.js';
+import { disableTerminalPanel } from '../../config/env.js';
 
 const MAX_UPCOMING = 5;
 
@@ -11,6 +14,29 @@ let panelLines = 0;
 let consoleFiltered = false;
 let renderPending = false;
 
+/** @type {import('events').EventEmitter} */
+const statusEmitter = new EventEmitter();
+statusEmitter.setMaxListeners(50);
+
+function notifyStatusChange() {
+    statusEmitter.emit('change', getSnapshot());
+}
+
+export function getSnapshot() {
+    return {
+        botStatus,
+        nowPlaying,
+        lastCommand,
+        upcoming: [...upcoming],
+    };
+}
+
+/** @param {(snapshot: ReturnType<typeof getSnapshot>) => void} listener */
+export function onStatusChange(listener) {
+    statusEmitter.on('change', listener);
+    return () => statusEmitter.off('change', listener);
+}
+
 function clearPanel() {
     if (panelLines <= 0) {
         return;
@@ -20,6 +46,10 @@ function clearPanel() {
 }
 
 function renderNow() {
+    if (disableTerminalPanel) {
+        return;
+    }
+
     const nextLines = upcoming.slice(0, MAX_UPCOMING);
     const padding = MAX_UPCOMING - nextLines.length;
 
@@ -38,6 +68,14 @@ function renderNow() {
     clearPanel();
     process.stdout.write(`${block.join('\n')}\n`);
     panelLines = block.length;
+
+    if (disableTerminalPanel) {
+        logBus.append(
+            'info',
+            `${botStatus} · ${nowPlaying} · ${lastCommand}`,
+            'panel'
+        );
+    }
 }
 
 function scheduleRender() {
@@ -61,22 +99,31 @@ export function initConsole() {
 
     Log.setLevel(Log.Level.NONE);
 
+    const originalLog = console.log.bind(console);
     const originalWarn = console.warn.bind(console);
     const originalError = console.error.bind(console);
 
+    console.log = (...args) => {
+        const text = logBus.formatArgs(args);
+        logBus.append('info', text, 'console');
+        originalLog(...args);
+    };
+
     console.warn = (...args) => {
-        const text = args.map(String).join(' ');
+        const text = logBus.formatArgs(args);
         if (isYoutubeNoise(text)) {
             return;
         }
+        logBus.append('warn', text, 'console');
         originalWarn(...args);
     };
 
     console.error = (...args) => {
-        const text = args.map(String).join(' ');
+        const text = logBus.formatArgs(args);
         if (isYoutubeNoise(text)) {
             return;
         }
+        logBus.append('error', text, 'console');
         originalError(...args);
     };
 
@@ -87,6 +134,8 @@ export function initConsole() {
         ) {
             return;
         }
+        const text = warning.stack ?? warning.message;
+        logBus.append('warn', text, 'process');
         originalWarn(warning);
     });
 }
@@ -104,36 +153,50 @@ export function setReady(message) {
     nowPlaying = 'Sin reproducción';
     lastCommand = '—';
     upcoming = [];
+    logBus.append('info', botStatus, 'status');
     scheduleRender();
+    notifyStatusChange();
 }
 
 export function setLastCommand(command) {
     lastCommand = command;
+    logBus.append('info', `Comando: ${command}`, 'command');
     scheduleRender();
+    notifyStatusChange();
 }
 
 export function setNowPlaying(label) {
     nowPlaying = label;
+    logBus.append('info', label, 'status');
     scheduleRender();
+    notifyStatusChange();
 }
 
 export function idle(label = 'Sin reproducción') {
     nowPlaying = label;
     upcoming = [];
+    logBus.append('info', label, 'status');
     scheduleRender();
+    notifyStatusChange();
 }
 
 export function showQueue(playing, nextTracks = []) {
     nowPlaying = playing;
     upcoming = nextTracks.slice(0, MAX_UPCOMING);
+    logBus.append('info', playing, 'status');
     scheduleRender();
+    notifyStatusChange();
 }
 
 export function logError(context, error) {
     const message = error?.message ?? String(error);
     clearPanel();
     panelLines = 0;
-    process.stdout.write('\n');
+    if (!disableTerminalPanel) {
+        process.stdout.write('\n');
+    }
+    logBus.append('error', `${context}: ${message}`, 'error');
     console.error(`✖ ${context}: ${message}`);
     scheduleRender();
+    notifyStatusChange();
 }

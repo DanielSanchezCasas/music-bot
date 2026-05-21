@@ -12,7 +12,9 @@ export function registerDiscordEvents(client) {
             const result = await registerSlashCommands(client);
             const scope =
                 result.mode === 'guild'
-                    ? `servidor ${result.guildId}`
+                    ? result.guildIds?.length > 1
+                        ? `${result.guildIds.length} servidores`
+                        : `servidor ${result.guildId}`
                     : 'global (puede tardar hasta 1 h)';
             status.setReady(
                 `Conectado · ${client.user.tag} · /commands en ${scope}`

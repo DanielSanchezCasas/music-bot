@@ -10,7 +10,7 @@ const NO_QUEUE_MESSAGE = 'No hay música en reproducción.';
 export function resolveQueueList(player, guildId) {
     const queue = player.queues.get(guildId);
 
-    if (!queue) {
+    if (!queue || queue.deleted) {
         return { error: NO_QUEUE_MESSAGE };
     }
 
