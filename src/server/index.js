@@ -172,19 +172,24 @@ export async function startWebServer(client, player) {
     const hasWebDist =
         fs.existsSync(webDist) && fs.existsSync(path.join(webDist, 'index.html'));
 
-    if (hasWebDist) {
-        await app.register(fastifyStatic, {
-            root: webDist,
-            prefix: '/',
-        });
-
-        app.setNotFoundHandler((request, reply) => {
-            if (request.url.split('?')[0].startsWith('/api/')) {
-                return reply.code(404).send({ error: 'No encontrado' });
-            }
-            return reply.sendFile('index.html');
-        });
+    if (!hasWebDist) {
+        const message =
+            'No se encontró web/dist (ejecuta pnpm build:web o reconstruye la imagen Docker)';
+        logBus.append('error', message, 'api');
+        throw new Error(message);
     }
+
+    await app.register(fastifyStatic, {
+        root: webDist,
+        prefix: '/',
+    });
+
+    app.setNotFoundHandler((request, reply) => {
+        if (request.url.split('?')[0].startsWith('/api/')) {
+            return reply.code(404).send({ error: 'No encontrado' });
+        }
+        return reply.sendFile('index.html');
+    });
 
     await app.listen({ port: webPort, host: '0.0.0.0' });
     console.log(`Interfaz web en http://0.0.0.0:${webPort}`);

@@ -16,6 +16,8 @@
     "start": "node src/index.js",
     "start:dev": "concurrently -n bot,web -c blue,green \"node src/index.js\" \"wait-on -t 120000 http-get://127.0.0.1:3000/api/health && pnpm --dir web dev\"",
     "build:web": "pnpm --dir web build",
+    "docker:up": "docker compose up -d --build",
+    "docker:logs": "docker compose logs -f --tail 50 music-bot",
     "dev:web": "pnpm --dir web dev",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

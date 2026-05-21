@@ -10,25 +10,26 @@ Bot de música para Discord con interfaz web para controlarlo desde el navegador
 
 ## Instalación en CasaOS
 
-1. Clona o sube el proyecto al NAS.
-2. Crea el archivo `.env` junto a `docker-compose.yml`:
+Guía detallada (icono en el panel, v0.4.15, errores frecuentes): **[CASAOS.md](./CASAOS.md)**.
+
+1. Clona o sube el proyecto al servidor.
+2. Crea `.env` junto a `docker-compose.yml`:
 
 ```env
 TOKEN_BOT=tu_token_discord
 GUILD_ID=id_servidor1,id_servidor2
-WEB_PORT=3000
 WEB_API_TOKEN=un_token_largo_y_secreto
 ```
 
-3. En la carpeta del proyecto:
+3. Instala por terminal:
 
 ```bash
 docker compose up -d --build
 ```
 
-4. Abre en el navegador: `http://<ip-del-nas>:3000`
-5. Introduce el `WEB_API_TOKEN`.
-6. Conéctate a un canal de voz en Discord y usa **Play** desde la web.
+4. Interfaz gráfica: `http://<ip-del-servidor>:3000` (misma red).
+5. Contraseña web = `WEB_API_TOKEN`.
+6. Para el **icono en CasaOS**: importa `docker-compose.yml` (Docker Compose), no el formulario manual. El compose ya incluye `image:` y labels `casaos.io/*`.
 
 ## Variables de entorno
 
