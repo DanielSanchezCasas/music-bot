@@ -19,6 +19,8 @@ RUN apt-get update \
         ca-certificates \
         fontconfig \
         libfontconfig1 \
+        python3 \
+        python-is-python3 \
     && rm -rf /var/lib/apt/lists/*
 
 RUN corepack enable && corepack prepare pnpm@10.11.0 --activate
