@@ -55,6 +55,19 @@ pnpm start:dev
 - Bot + API: puerto 3000  
 - UI Vue: http://localhost:5173
 
+## Actualizar en CasaOS / Ubuntu
+
+En la carpeta del proyecto en el NAS/servidor:
+
+```bash
+git pull   # o copia los archivos actualizados
+docker compose down
+docker compose up -d --build
+docker compose logs -f --tail 30 music-bot
+```
+
+La imagen usa **Node 22** (requerido por `undici@8`). Si el contenedor reinicia en bucle, revisa los logs con el comando anterior.
+
 ## Notas
 
 - El audio usa **discord-player-youtubei v3** con varios métodos de respaldo (adaptive, SABR, yt-dlp si está instalado).

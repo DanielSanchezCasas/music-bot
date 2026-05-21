@@ -1,4 +1,5 @@
-FROM node:20-bookworm-slim AS web-build
+# Node 22: undici@8 (discord-player-youtubei) falla en Node 20 dentro del contenedor
+FROM node:22-bookworm-slim AS web-build
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates \
@@ -12,7 +13,7 @@ RUN pnpm install --frozen-lockfile 2>/dev/null || pnpm install
 COPY web/ ./
 RUN pnpm build
 
-FROM node:20-bookworm-slim
+FROM node:22-bookworm-slim
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
