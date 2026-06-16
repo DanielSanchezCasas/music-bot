@@ -36,12 +36,14 @@ export function registerPlayerEvents(player) {
         if (queue?.node?.isPlaying()) {
             return;
         }
+        status.idle('Cola vacía · desconectando en 2 min…');
         syncFromQueue(queue);
     });
 
     player.events.on('disconnect', (queue) => {
+        status.idle('Sin reproducción');
         if (queue && !queue.deleted) {
-            status.logError('Voz', new Error('Desconectado del canal de voz'));
+            syncFromQueue(queue);
         }
     });
 }

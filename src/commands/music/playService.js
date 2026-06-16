@@ -58,7 +58,8 @@ export async function executePlay({
                 volume: 100,
                 resampler: 48000,
                 leaveOnEmpty: false,
-                leaveOnEnd: false,
+                leaveOnEnd: true,
+                leaveOnEndCooldown: 2 * 60 * 1000,
             },
         });
 
