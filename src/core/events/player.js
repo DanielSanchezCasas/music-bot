@@ -9,6 +9,7 @@ export function registerPlayerEvents(player) {
     player.events.on('playerError', (queue, error, track) => {
         status.logError(`Error al reproducir: ${track?.title ?? 'canción'}`, error);
         if (queue && !queue.deleted) {
+            queue.node.skip();
             syncFromQueue(queue);
         }
     });
