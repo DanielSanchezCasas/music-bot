@@ -10,7 +10,10 @@
     "onlyBuiltDependencies": [
       "ffmpeg-static",
       "youtube-dl-exec"
-    ]
+    ],
+    "overrides": {
+      "esbuild": "^0.28.1"
+    }
   },
   "scripts": {
     "start": "node src/index.js",
